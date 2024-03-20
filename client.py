@@ -1,25 +1,38 @@
-import socket
 import threading
+import socket
 
-# Choosing Nickname
+# choosing nickname
 nickname = input("Choose your nickname: ")
 
-# Connecting To Server
+if nickname == 'admin':
+    password = input("Enter password for admin:")
+
+# connecting to server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(('127.0.0.1', 55555))
+client.connect(('192.168.56.1', 55555))
 
-connected = True
+stop_thread = True
 
-# Listening to Server and Sending Nickname
+# listening to Server and Sending Nickname
 def receive():
-    global connected
-    while True:
+    global stop_thread
+    while not stop_thread:
         try:
             # Receive Message From Server
             # If 'NICK' Send Nickname
             message = client.recv(1024).decode('ascii')
             if message == 'NICK':
                 client.send(nickname.encode('ascii'))
+                next_message = client.recv(1024).decode('ascii')
+                if next_message == 'PASS':
+                    client.send(password.encode('ascii'))
+                    if(client.recv(1024).decode('ascii') == 'REFUSE'):
+                        print("Wrong password, connection refused.")
+                        stop_thread = True
+                elif next_message == 'BAN':
+                    print("Connection refused because of ban from chat.")
+                    client.close()
+                    stop_thread = True
             else:
                 print(message)
         except:
@@ -30,10 +43,19 @@ def receive():
             break
 
 def write():
-    global connected
-    while connected:
+    global stop_thread
+    while not stop_thread:
         message = '{}: {}'.format(nickname, input(''))
-        client.send(message.encode('ascii'))
+        if message[len(nickname)+2:].startswith('/'):
+            if nickname == 'admin':
+                if message[len(nickname)+2:].startswith('/kick'):
+                    client.send(f'KICK {message[len(nickname)+8:]}'.encode('ascii'))
+                elif message[len(nickname)+2:].startswith('/ban'):
+                    client.send(f'BAN {message[len(nickname)+7:]}'.encode('ascii'))
+            else:
+                print("Commands can only be executed by the admin.")
+        else:
+            client.send(message.encode('ascii'))
 
 # Starting Threads For Listening And Writing
 receive_thread = threading.Thread(target=receive)
