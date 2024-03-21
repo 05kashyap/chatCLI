@@ -24,13 +24,13 @@ def handle(client):
             if message == b'':
                 raise Exception('Client disconnected')
             if msg.decode('ascii').startswith('KICK'):
-                if nicknames[client.index(client)] == 'admin':
+                if nicknames[clients.index(client)] == 'admin':
                     name_to_kick = msg.decode('ascii')[5:]
                     kick_user(name_to_kick)
                 else:
                     client.send('Command was refused.'.encode('ascii'))
             elif msg.decode('ascii').startswith('BAN'):
-                if nicknames[client.index(client)] == 'admin':
+                if nicknames[clients.index(client)] == 'admin':
                     name_to_ban = msg.decode('ascii')[4:]
                     kick_user(name_to_ban)
                     with open('bans.txt','a') as f:

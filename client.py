@@ -11,12 +11,14 @@ if nickname == 'admin':
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(('192.168.56.1', 55555))
 
-stop_thread = True
+stop_thread = False
 
 # listening to Server and Sending Nickname
 def receive():
-    global stop_thread
-    while not stop_thread:
+    while True:
+        global stop_thread
+        if stop_thread:
+            break
         try:
             # Receive Message From Server
             # If 'NICK' Send Nickname
@@ -39,12 +41,12 @@ def receive():
             # Close Connection When Error
             print("An error occured!")
             client.close()
-            connected = False
             break
 
 def write():
-    global stop_thread
-    while not stop_thread:
+    while True:
+        if stop_thread:
+            break
         message = '{}: {}'.format(nickname, input(''))
         if message[len(nickname)+2:].startswith('/'):
             if nickname == 'admin':
