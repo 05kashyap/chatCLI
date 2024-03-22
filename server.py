@@ -40,14 +40,18 @@ def handle(client):
                     client.send('Command was refused.'.encode('ascii'))
             else:
                 broadcast(message)
-        except:
-            # Removing And Closing Clients
-            index = clients.index(client)
-            clients.remove(client)
-            client.close()
-            nickname = nicknames[index]
-            broadcast('{} left!'.format(nickname).encode('ascii'))
-            nicknames.remove(nickname)
+        except ConnectionResetError:
+            if client in clients:
+                # Removing And Closing Clients
+                index = clients.index(client)
+                clients.remove(client)
+                client.close()
+                nickname = nicknames[index]
+                broadcast('{} left!'.format(nickname).encode('ascii'))
+                nicknames.remove(nickname)
+                break
+        except Exception as e:
+            print(f"Error handling client: {e}")
             break
 
 def receive():
@@ -90,13 +94,19 @@ def receive():
         thread.start()
 
 def kick_user(name):
-    if name in nicknames:
-        name_index = nicknames.index(name)
-        client_to_kick = clients[name_index]
-        clients.remove(client_to_kick)
-        client_to_kick.send('You were kicked by an admin.'.encode('ascii'))
-        client_to_kick.close()
-        nicknames.remove(name)
-        broadcast(f'{name} was kicked from chat.')
+    try:
+        if name in nicknames:
+            name_index = nicknames.index(name)
+            client_to_kick = clients[name_index]
+            clients.remove(client_to_kick)
+            client_to_kick.send('You were kicked by an admin.'.encode('ascii'))
+            client_to_kick.close()
+            nicknames.remove(name)
+            broadcast(f'{name} was kicked from chat.'.encode('ascii'))
+        else:
+            broadcast(f'{name} is not in the chat.'.encode('ascii'))
+    except Exception as e:
+        print(f"Error while kicking user: {e}")
+
 
 receive()
