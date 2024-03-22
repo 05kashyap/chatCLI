@@ -6,10 +6,10 @@ nickname = input("Choose your nickname: ")
 
 if nickname == 'admin':
     password = input("Enter password for admin:")
-
+ip = '' # add IP address here
 # connecting to server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(('192.168.56.1', 55555))
+client.connect((ip, 55555))
 
 stop_thread = False
 
